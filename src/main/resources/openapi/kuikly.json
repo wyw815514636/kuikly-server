@@ -1,0 +1,1104 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Kuikly Server API",
+    "version": "0.1.0",
+    "description": "Ktor 认证与用户查询契约。敏感请求拒绝未知字段；客户端应容忍响应新增字段。文档入口不属于业务契约。"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Users"
+    },
+    {
+      "name": "Operations"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "存活检查",
+        "tags": [
+          "Operations"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "存活检查",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "ready",
+        "summary": "就绪检查",
+        "tags": [
+          "Operations"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "数据库可用且未进入停机状态",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "数据库不可用或正在停机",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "账号密码登录",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "账号密码登录",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数不合法",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未认证、凭据错误或会话失效",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "请求体超过 4096 字节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "不支持的媒体类型",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "一分钟内账号登录尝试超过五次",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "内部错误，不泄露实现细节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "认证计算容量不足，请稍后重试",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "description": "账号区分大小写，仅支持小写 ASCII。每账号固定一分钟窗口最多五次尝试，包含成功尝试；错误账号和错误密码使用同一错误信息。",
+        "x-max-body-bytes": 4096
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "refreshSession",
+        "summary": "轮换或重试刷新令牌",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "轮换或重试刷新令牌",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数不合法",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未认证、凭据错误或会话失效",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "请求体超过 4096 字节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "不支持的媒体类型",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "内部错误，不泄露实现细节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "x-max-body-bytes": 4096,
+        "description": "每次逻辑刷新生成新 requestId，弱网重试复用旧 refreshToken 和相同 requestId。默认十秒宽限期（可配置 0–15 秒）内且后继令牌未消费时返回完全相同的令牌对；expiresIn 不因重试递减，请以 JWT exp 为准。超窗或不同 requestId 重用已消费令牌会撤销当前会话族并返回 REFRESH_REUSED，其他设备不受影响。会话绝对期限默认三十天，不随刷新延长。"
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "撤销当前会话",
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "204": {
+            "description": "撤销当前会话",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            }
+          },
+          "401": {
+            "description": "未认证、凭据错误或会话失效",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "请求体超过 4096 字节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "内部错误，不泄露实现细节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "operationId": "logoutAll",
+        "summary": "撤销该用户所有已有会话",
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "204": {
+            "description": "撤销该用户所有已有会话",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            }
+          },
+          "401": {
+            "description": "未认证、凭据错误或会话失效",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "请求体超过 4096 字节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "内部错误，不泄露实现细节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "operationId": "currentUser",
+        "summary": "查询当前用户",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "查询当前用户",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未认证、凭据错误或会话失效",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "内部错误，不泄露实现细节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "operationId": "getUser",
+        "summary": "本人或管理员查询用户",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "本人或管理员查询用户",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数不合法",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未认证、凭据错误或会话失效",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在或不可见",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "内部错误，不泄露实现细节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "description": "普通用户查询其他用户返回 404；ADMIN 可查询其他用户。",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Id"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/me": {
+      "get": {
+        "operationId": "currentAdmin",
+        "summary": "验证管理员权限并返回当前用户",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "验证管理员权限并返回当前用户",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未认证、凭据错误或会话失效",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "权限不足",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "内部错误，不泄露实现细节",
+            "headers": {
+              "X-Request-ID": {
+                "description": "服务端生成的请求关联 ID；不同于客户端刷新 requestId。",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "短期 HS256 Access Token；服务端同时检查用户与会话状态。"
+      }
+    },
+    "schemas": {
+      "Id": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      },
+      "LoginRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_.-]{2,63}$"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 1,
+            "maxLength": 128,
+            "writeOnly": true,
+            "description": "登录接受既有密码；创建账号时要求至少十五个字符。"
+          }
+        }
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "refreshToken",
+          "requestId"
+        ],
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "minLength": 43,
+            "maxLength": 43,
+            "writeOnly": true
+          },
+          "requestId": {
+            "$ref": "#/components/schemas/Id"
+          }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "expiresIn",
+          "sessionId",
+          "tokenType"
+        ],
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "minLength": 1
+          },
+          "refreshToken": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 1800
+          },
+          "sessionId": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "tokenType": {
+            "type": "string",
+            "enum": [
+              "Bearer"
+            ]
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "username",
+          "role"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_.-]{2,63}$"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "ADMIN"
+            ],
+            "description": "客户端需为未来新增角色保留未知值兜底。"
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "description": "稳定业务错误码，例如 INVALID_REQUEST、INVALID_CREDENTIALS、INVALID_REFRESH、REFRESH_REUSED、LOGIN_THROTTLED、AUTH_BUSY、FORBIDDEN、USER_NOT_FOUND、INTERNAL_ERROR。"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "traceId": {
+            "$ref": "#/components/schemas/Id"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "UP",
+              "DOWN"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+ktor:
+  deployment:
+    host: "${HOST:127.0.0.1}"
+    port: "${PORT:8080}"
+    shutdownGracePeriod: 1000
+    shutdownTimeout: 10000
+  application:
+    modules:
+      - com.kuikly.server.ApplicationKt.module
+app:
+  environment: "${APP_ENV:dev}"
+database:
+  jdbcUrl: "${DB_URL:}"
+  username: "${DB_USER:}"
+  password: "${DB_PASSWORD:}"
+  maximumPoolSize: "${DB_POOL_SIZE:8}"
+  connectionTimeoutMillis: "${DB_CONNECTION_TIMEOUT_MS:3000}"
+  queryTimeoutSeconds: "${DB_QUERY_TIMEOUT_SECONDS:5}"
+  migrationTimeoutSeconds: "${DB_MIGRATION_TIMEOUT_SECONDS:300}"
+auth:
+  signingKey: "${AUTH_SIGNING_KEY:}"
+  retryKey: "${AUTH_RETRY_KEY:}"
+  issuer: "${AUTH_ISSUER:kuikly-server}"
+  audience: "${AUTH_AUDIENCE:kuikly-client}"
+  accessSeconds: "${AUTH_ACCESS_SECONDS:900}"
+  sessionSeconds: "${AUTH_SESSION_SECONDS:2592000}"
+  graceSeconds: "${AUTH_GRACE_SECONDS:10}"
+docs:
+  enabled: "${API_DOCS_ENABLED:}"
