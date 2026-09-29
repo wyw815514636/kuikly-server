@@ -279,7 +279,7 @@ class AuthIntegrationTest {
         DriverManager.getConnection(settings.jdbcUrl, settings.username, settings.password).use { connection ->
             connection.createStatement().use { it.execute("CREATE TABLE app.existing (id INT PRIMARY KEY); INSERT INTO app.existing VALUES (7)") }
         }
-        assertEquals(1, DatabaseRuntime.migrate(settings))
+        assertEquals(2, DatabaseRuntime.migrate(settings))
         DriverManager.getConnection(settings.jdbcUrl, settings.username, settings.password).use { connection ->
             connection.createStatement().use { statement ->
                 statement.executeQuery("SELECT id FROM app.existing").use { assertTrue(it.next()); assertEquals(7, it.getInt(1)) }

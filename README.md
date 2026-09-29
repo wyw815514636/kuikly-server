@@ -2,7 +2,7 @@
 
 Ktor 服务端：已完成依赖锁定、基础设施、账号密码认证与用户查询，以及 OpenAPI 契约和 CI 验收配置。
 
-使用 PostgreSQL 持久化会话，USER/ADMIN 角色与资源归属共同控制访问。跨端共享契约、完整后台权限模型与部署流水线尚未实现。
+使用 PostgreSQL 持久化会话，USER/ADMIN 角色与资源归属共同控制访问。管理端另有独立 Cookie 认证域、RBAC、MFA 与审计；客户端 JWT 认证保持独立。管理端说明见 [docs/admin-foundation.md](docs/admin-foundation.md)。
 
 ## 技术栈
 
@@ -27,7 +27,7 @@ Ktor 服务端：已完成依赖锁定、基础设施、账号密码认证与用
 | OpenAPI / Swagger UI | 3.0.3 / 5.31.0 |
 | OpenAPI Request Validator（仅测试） | 3.0.0 |
 
-直接依赖版本维护在 `gradle/libs.versions.toml`，项目配置的传递依赖由 `gradle.lockfile` 严格锁定。生成的 `settings-gradle.lockfile` 也需纳入版本控制。Ktor、Kotlin、coroutines 和 JUnit 使用各自 BOM 对齐应用依赖中的同族组件；编译工具自身的依赖保持上游配置。Gradle 分发包使用 SHA-256 校验。
+基础直接依赖版本维护在 `gradle/libs.versions.toml`，管理模块的 Bouncy Castle 与 otp-java 固定在 `build.gradle.kts`，项目配置的传递依赖由 `gradle.lockfile` 严格锁定。生成的 `settings-gradle.lockfile` 也需纳入版本控制。Ktor、Kotlin、coroutines 和 JUnit 使用各自 BOM 对齐应用依赖中的同族组件；编译工具自身的依赖保持上游配置。Gradle 分发包使用 SHA-256 校验。
 
 Ktor 选择 3.5 系列补丁版作为本次兼容性基线。版本可下载和构建通过不代表完成生产可靠性或安全审计。后续升级应同步运行兼容性测试及业务集成测试。
 
@@ -79,7 +79,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew clean check
 
 认证阶段验收通过：14 项普通测试和 21 项 PostgreSQL 集成测试，共 35 项，零失败、零跳过。发行包另行实测交互式用户创建、8 路并发刷新、会话撤销、日志凭据隐藏和 SIGTERM 连接释放。OpenAPI 与 CI 阶段的最新结果记录在 `docs/superpowers/plans/2026-09-29-openapi-ci.md`。
 
-当前本地完整验收：`clean check installDist distTar` 通过，共 42 项测试，零失败、零跳过；actionlint 工作流检查通过。发行包文档开关与 tar 权限已实测，GitHub 云端运行尚待代码推送后验证。
+基础版本本地完整验收（新增管理模块前）：`clean check installDist distTar` 通过，共 42 项测试，零失败、零跳过；actionlint 工作流检查通过。发行包文档开关与 tar 权限已实测，GitHub 云端运行尚待代码推送后验证。
 
 ## 启动与迁移
 

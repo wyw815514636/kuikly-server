@@ -50,7 +50,7 @@ class DatabaseIntegrationTest {
     fun `empty database requires migration and repeated migration is idempotent`() = runBlocking {
         val settings = newSettings()
         assertFailsWith<IllegalStateException> { DatabaseRuntime.open(settings) }
-        assertEquals(2, DatabaseRuntime.migrate(settings))
+        assertEquals(3, DatabaseRuntime.migrate(settings))
         assertEquals(0, DatabaseRuntime.migrate(settings))
         val runtime = DatabaseRuntime.open(settings)
         runtime.use {
@@ -104,7 +104,7 @@ class DatabaseIntegrationTest {
             }
             URLClassLoader(arrayOf(directory.toUri().toURL()), previousLoader).use { loader ->
                 Thread.currentThread().contextClassLoader = loader
-                assertEquals(3, DatabaseRuntime.migrate(settings))
+                assertEquals(4, DatabaseRuntime.migrate(settings))
             }
         } finally {
             Thread.currentThread().contextClassLoader = previousLoader

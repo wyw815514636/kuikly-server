@@ -1,5 +1,10 @@
 package com.kuikly.server
 
+import com.kuikly.server.config.AdminSettings
+import com.kuikly.server.modules.admin.application.AdminService
+import com.kuikly.server.modules.admin.application.prune
+import com.kuikly.server.modules.admin.infrastructure.AdminCrypto
+import com.kuikly.server.modules.admin.api.configureAdminRoutes
 import com.kuikly.server.api.configureHealthRoutes
 import com.kuikly.server.api.configureApiDocumentation
 import com.kuikly.server.config.ApiDocsSettings
@@ -7,6 +12,7 @@ import com.kuikly.server.application.ReadinessProbe
 import com.kuikly.server.application.TransactionRunner
 import com.kuikly.server.config.ServerConfig
 import com.kuikly.server.config.AuthSettings
+import com.kuikly.server.infrastructure.adminCommand
 import com.kuikly.server.infrastructure.createUserCommand
 import com.kuikly.server.modules.auth.api.configureAuthentication
 import com.kuikly.server.modules.auth.application.AuthService
@@ -37,6 +43,8 @@ fun main(args: Array<String>) {
     if (args.firstOrNull() == "migrate") {
         require(args.size == 1) { "The migration command accepts no additional arguments" }
         DatabaseRuntime.migrate(ServerConfig.load(ApplicationConfig("application.yaml")).database)
+    } else if (args.firstOrNull() in setOf("create-admin", "recover-admin-mfa", "prune-admin-audit")) {
+        adminCommand(args)
     } else if (args.firstOrNull() == "create-user") {
         createUserCommand(args)
     } else {
@@ -48,6 +56,7 @@ fun Application.module() {
     val settings = ServerConfig.load(environment.config)
     val authSettings = AuthSettings.load(environment.config)
     val docsSettings = ApiDocsSettings.load(environment.config)
+    val adminSettings = AdminSettings.load(environment.config)
     val database = DatabaseRuntime.open(settings.database)
     try {
         val users = ExposedUserRepository()
@@ -55,6 +64,7 @@ fun Application.module() {
         val auth = AuthService(database.transactions, users, ExposedAuthRepository(), PasswordCodec(), tokens,
             authSettings.sessionSeconds * 1000, authSettings.graceSeconds * 1000, System::currentTimeMillis)
         val userService = UserService(database.transactions, users)
+        val adminService = adminSettings?.let { AdminService(database.transactions, AdminCrypto(it.secretKey), idleMillis = it.idleMillis, sessionMillis = it.sessionMillis) }
         install(Koin) {
             modules(module {
                 single { database }
@@ -62,17 +72,19 @@ fun Application.module() {
                 single<ReadinessProbe> { database }
                 single { auth }
                 single { userService }
+                if (adminService != null) single { adminService }
             })
         }
         configureHttp()
         configureHealthRoutes(database)
         configureAuthentication(auth, tokens.verifier)
         configureUserRoutes(userService)
+        if (adminService != null) configureAdminRoutes(adminService, adminSettings)
         configureApiDocumentation(docsSettings)
         val cleanup = launch {
             while (isActive) {
                 delay(60_000)
-                try { auth.prune() }
+                try { auth.prune(); adminService?.prune() }
                 catch (cancelled: CancellationException) { throw cancelled }
                 catch (failure: Exception) { environment.log.error("Authentication record cleanup failed", failure) }
             }

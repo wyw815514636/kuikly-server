@@ -14,6 +14,7 @@ fun Application.configureApiDocumentation(settings: ApiDocsSettings) {
         "Packaged OpenAPI contract is missing"
     }.readText()
     routing {
+        get("/admin-openapi.json") { call.respondText(requireNotNull(Application::class.java.getResource("/openapi/admin.json")).readText(), ContentType.Application.Json) }
         get("/openapi.json") { call.respondText(contract, ContentType.Application.Json) }
         swaggerUI(path = "docs", apiUrl = "kuikly.json", api = contract) {
             version = "5.31.0"

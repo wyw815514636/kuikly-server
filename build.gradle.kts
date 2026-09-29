@@ -22,6 +22,8 @@ kotlin {
 }
 
 dependencies {
+    implementation("org.bouncycastle:bcprov-jdk18on:1.86")
+    implementation("com.github.bastiaanjansen:otp-java:2.2.0")
     implementation(platform(libs.kotlin.bom))
     implementation(platform(libs.ktor.bom))
     implementation(platform(libs.coroutines.bom))
@@ -98,4 +100,11 @@ tasks.wrapper {
     distributionType = Wrapper.DistributionType.BIN
     distributionSha256Sum = "b266d5ff6b90eada6dc3b20cb090e3731302e553a27c5d3e4df1f0d76beaff06"
     networkTimeout = 60_000
+}
+
+// Isolated browser integration fixture: test classes are excluded from installDist/distTar.
+tasks.register<JavaExec>("adminE2eServer") {
+    dependsOn(tasks.testClasses)
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("com.kuikly.server.AdminE2eServer")
 }
